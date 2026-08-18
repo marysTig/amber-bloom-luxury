@@ -7,7 +7,7 @@ export function ProductCard({
   categoryName,
 }: {
   product: Product;
-  categoryName?: string;
+  categoryName?: string | undefined;
 }) {
   const soldOut = product.stock <= 0;
 

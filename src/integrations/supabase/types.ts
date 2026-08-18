@@ -14,13 +14,186 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      order_items: {
+        Row: {
+          id: string
+          order_id: string
+          product_id: string | null
+          product_name: string
+          quantity: number
+          subtotal: number
+          unit_price: number
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          product_id?: string | null
+          product_name: string
+          quantity: number
+          subtotal: number
+          unit_price: number
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          product_id?: string | null
+          product_name?: string
+          quantity?: number
+          subtotal?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          address: string
+          created_at: string
+          customer_name: string
+          id: string
+          phone: string
+          reference: string
+          status: string
+          total: number
+          wilaya: string
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          customer_name: string
+          id?: string
+          phone: string
+          reference?: string
+          status?: string
+          total?: number
+          wilaya: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          customer_name?: string
+          id?: string
+          phone?: string
+          reference?: string
+          status?: string
+          total?: number
+          wilaya?: string
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          badge: string | null
+          base_notes: string[]
+          bottle_color: string
+          category_id: string | null
+          created_at: string
+          description: string
+          heart_notes: string[]
+          id: string
+          image: string
+          name: string
+          price: number
+          sales_count: number
+          stock: number
+          top_notes: string[]
+          updated_at: string
+        }
+        Insert: {
+          badge?: string | null
+          base_notes?: string[]
+          bottle_color?: string
+          category_id?: string | null
+          created_at?: string
+          description?: string
+          heart_notes?: string[]
+          id?: string
+          image?: string
+          name: string
+          price?: number
+          sales_count?: number
+          stock?: number
+          top_notes?: string[]
+          updated_at?: string
+        }
+        Update: {
+          badge?: string | null
+          base_notes?: string[]
+          bottle_color?: string
+          category_id?: string | null
+          created_at?: string
+          description?: string
+          heart_notes?: string[]
+          id?: string
+          image?: string
+          name?: string
+          price?: number
+          sales_count?: number
+          stock?: number
+          top_notes?: string[]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_order: {
+        Args: {
+          p_address: string
+          p_customer_name: string
+          p_items: Json
+          p_phone: string
+          p_wilaya: string
+        }
+        Returns: {
+          order_id: string
+          order_reference: string
+          order_total: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

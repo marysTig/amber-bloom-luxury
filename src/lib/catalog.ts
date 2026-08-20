@@ -1,7 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export type Category = { id: string; name: string };
+export type Category = { id: string; name: string; description: string | null; photo: string | null };
 
 export type Product = {
   id: string;
@@ -10,18 +10,21 @@ export type Product = {
   price: number;
   stock: number;
   description: string;
-  top_notes: string[];
-  heart_notes: string[];
-  base_notes: string[];
-  bottle_color: string;
-  image: string;
+  benefits: string[];
+  ingredients: string[];
+  how_to_use: string;
+  volume_ml: number;
+  shade: string[];
+  origin: string;
+  expiration_date: string;
+  images: string[];
   badge: string | null;
   sales_count: number;
   created_at: string;
 };
 
 const PRODUCT_FIELDS =
-  "id, category_id, name, price, stock, description, top_notes, heart_notes, base_notes, bottle_color, image, badge, sales_count, created_at";
+  "id, category_id, name, price, stock, description, benefits, ingredients, how_to_use, volume_ml, shade, origin, expiration_date, images, badge, sales_count, created_at";
 
 export const categoriesQuery = () =>
   queryOptions({
@@ -29,7 +32,7 @@ export const categoriesQuery = () =>
     queryFn: async (): Promise<Category[]> => {
       const { data, error } = await supabase
         .from("categories")
-        .select("id, name")
+        .select("id, name, description, photo")
         .order("created_at", { ascending: true });
       if (error) throw new Error(error.message);
       return data ?? [];

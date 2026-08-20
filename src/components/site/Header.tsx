@@ -6,7 +6,6 @@ import { useCart } from "@/lib/cart";
 const NAV = [
   { to: "/", label: "الرئيسية" },
   { to: "/catalog", label: "الكتالوج" },
-  { to: "/story", label: "قصة العلامة" },
 ];
 
 export function Header() {
@@ -26,13 +25,12 @@ export function Header() {
             {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
 
-          <Link to="/" className="group flex flex-col leading-none">
-            <span className="font-display text-2xl tracking-tight text-gold md:text-3xl">
-              عَنبَر
-            </span>
-            <span className="mt-1 text-[10px] tracking-[0.35em] text-muted-foreground">
-              MAISON AMBRE
-            </span>
+          <Link to="/" className="group flex items-center">
+            <img 
+              src="/Logo.png" 
+              alt="Glow & Care" 
+              className="h-12 w-auto transition-transform duration-300 group-hover:scale-105 md:h-14" 
+            />
           </Link>
         </div>
 

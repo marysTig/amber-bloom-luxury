@@ -35,14 +35,14 @@ export function CartDrawer() {
             <div className="glow-orb h-24 w-24 rounded-full [background:radial-gradient(circle,color-mix(in_oklab,var(--amber-glow)_45%,transparent),transparent_70%)]" />
             <p className="font-display text-2xl text-foreground">سلتك فارغة</p>
             <p className="text-sm text-muted-foreground">
-              لم تُضف أي عطر بعد. دع حاسة الشم تقودك.
+              tu n'as pas ajouté de produit
             </p>
             <Link
               to="/catalog"
               onClick={() => setOpen(false)}
               className="mt-2 rounded-sm border border-primary/50 px-7 py-3 text-sm text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
             >
-              اكتشف العطور
+              découvre nos produits
             </Link>
           </div>
         ) : (

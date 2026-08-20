@@ -1,5 +1,8 @@
 export function formatDZD(value: number): string {
-  return `${new Intl.NumberFormat("ar-DZ", { maximumFractionDigits: 0 }).format(value)} دج`;
+  const formatted = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 })
+    .format(value)
+    .replace(/,/g, " ");
+  return `${formatted} دج`;
 }
 
 export function formatDate(value: string): string {

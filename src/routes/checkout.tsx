@@ -1,23 +1,25 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { Loader2, ShieldCheck, Home, Building2 } from "lucide-react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { useCart } from "@/lib/cart";
-import { formatDZD, WILAYAS } from "@/lib/format";
+import { formatDZD } from "@/lib/format";
 import { orderInputSchema } from "@/lib/shop.schemas";
-import { submitOrder } from "@/lib/shop.functions";
+import { submitOrder, getDeliveryFees } from "@/lib/shop.functions";
+import wilayasData from "../../wilayas-with-municipalities.json";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
     meta: [
-      { title: "إتمام الطلب | عَنبَر" },
+      { title: "إتمام الطلب | Glow & Care" },
       {
         name: "description",
         content: "أكمل طلبك في دقيقة واحدة دون إنشاء حساب — الدفع عند الاستلام.",
       },
-      { property: "og:title", content: "إتمام الطلب | عَنبَر" },
+      { property: "og:title", content: "إتمام الطلب | Glow & Care" },
       {
         property: "og:description",
         content: "معلومات التوصيل والدفع عند الاستلام في جميع الولايات.",
@@ -27,27 +29,70 @@ export const Route = createFileRoute("/checkout")({
   component: CheckoutPage,
 });
 
+type DeliveryType = "desk" | "home";
+
 function CheckoutPage() {
   const { lines, total, clear } = useCart();
   const navigate = useNavigate();
   const send = useServerFn(submitOrder);
+  const fetchFees = useServerFn(getDeliveryFees);
   const [pending, setPending] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [deliveryType, setDeliveryType] = useState<DeliveryType>("desk");
   const [form, setForm] = useState({
     customer_name: "",
     phone: "",
     wilaya: "",
+    commune: "",
     address: "",
   });
+  const [selectedShades, setSelectedShades] = useState<Record<string, string>>({});
 
-  const update = (key: keyof typeof form, value: string) =>
-    setForm((f) => ({ ...f, [key]: value }));
+  // Load delivery fees
+  const { data: deliveryFees = [] } = useQuery({
+    queryKey: ["delivery-fees"],
+    queryFn: () => fetchFees({ data: undefined }),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const update = (key: keyof typeof form, value: string) => {
+    if (key === "wilaya") {
+      setForm((f) => ({ ...f, wilaya: value, commune: "" }));
+    } else {
+      setForm((f) => ({ ...f, [key]: value }));
+    }
+  };
+
+  const selectedWilayaData = wilayasData.find((w) => w.nameFr === form.wilaya);
+
+  // Find fee for selected wilaya
+  const currentFee = deliveryFees.find((f) => f.wilaya_name_fr === form.wilaya);
+  const deliveryFeeAmount = currentFee
+    ? deliveryType === "desk"
+      ? currentFee.desk_price
+      : currentFee.home_price
+    : null;
+  const grandTotal = total + (deliveryFeeAmount ?? 0);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check for missing shade selections
+    const missingShades = lines.filter((l) => l.shades && l.shades.length > 0 && !selectedShades[l.product_id]);
+    if (missingShades.length > 0) {
+      toast.error("يرجى اختيار الدرجة/اللون لجميع المنتجات المطلوبة");
+      return;
+    }
+
     const parsed = orderInputSchema.safeParse({
       ...form,
-      items: lines.map((l) => ({ product_id: l.product_id, quantity: l.quantity })),
+      delivery_fee: deliveryFeeAmount || 0,
+      delivery_type: deliveryType,
+      items: lines.map((l) => ({ 
+        product_id: l.product_id, 
+        quantity: l.quantity,
+        selected_shade: selectedShades[l.product_id] || undefined
+      })),
     });
 
     if (!parsed.success) {
@@ -87,7 +132,7 @@ function CheckoutPage() {
             to="/catalog"
             className="mt-8 inline-block rounded-sm bg-primary px-8 py-4 text-sm text-primary-foreground"
           >
-            اكتشف العطور
+            découvre nos produits
           </Link>
         </div>
       </SiteLayout>
@@ -137,13 +182,70 @@ function CheckoutPage() {
                 <option value="" className="bg-card">
                   اختر الولاية
                 </option>
-                {WILAYAS.map((w) => (
-                  <option key={w} value={w} className="bg-card">
-                    {w}
+                {wilayasData.map((w) => (
+                  <option key={w.wilayaCode} value={w.nameFr} className="bg-card">
+                    {String(w.wilayaCode).padStart(2, '0')} - {w.nameAr}
                   </option>
                 ))}
               </select>
             </Field>
+
+            <Field label="البلدية" error={errors["commune"]}>
+              <select
+                value={form.commune}
+                onChange={(e) => update("commune", e.target.value)}
+                className="input-base"
+                disabled={!form.wilaya}
+              >
+                <option value="" className="bg-card">
+                  اختر البلدية
+                </option>
+                {selectedWilayaData?.communes.map((c) => (
+                  <option key={c.id} value={c.nameAr} className="bg-card">
+                    {c.nameAr}
+                  </option>
+                ))}
+              </select>
+            </Field>
+
+            {/* Delivery type selection */}
+            {form.wilaya && (
+              <div>
+                <p className="mb-3 block text-sm text-foreground/85">نوع التوصيل</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setDeliveryType("desk")}
+                    className={`flex flex-col items-center gap-2 rounded-sm border p-4 text-sm transition-all ${
+                      deliveryType === "desk"
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border/60 text-muted-foreground hover:border-primary/50"
+                    }`}
+                  >
+                    <Building2 className="h-5 w-5" />
+                    <span className="font-medium">البيرو (Bureau)</span>
+                    <span className="text-xs">
+                      {(!currentFee || currentFee.desk_price === 0) ? "مجاني" : formatDZD(currentFee.desk_price)}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeliveryType("home")}
+                    className={`flex flex-col items-center gap-2 rounded-sm border p-4 text-sm transition-all ${
+                      deliveryType === "home"
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border/60 text-muted-foreground hover:border-primary/50"
+                    }`}
+                  >
+                    <Home className="h-5 w-5" />
+                    <span className="font-medium">للمنزل (Domicile)</span>
+                    <span className="text-xs">
+                      {(!currentFee || currentFee.home_price === 0) ? "مجاني" : formatDZD(currentFee.home_price)}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            )}
 
             <Field label="العنوان بالتفصيل" error={errors["address"]}>
               <textarea
@@ -155,6 +257,35 @@ function CheckoutPage() {
                 placeholder="البلدية، الحي، الشارع، نقطة دالة..."
               />
             </Field>
+
+            {lines.some(l => l.shades && l.shades.length > 0) && (
+              <div className="space-y-5 rounded-sm border border-border/50 bg-background/50 p-5 elegant-shadow">
+                <h3 className="font-display text-lg text-primary border-b border-border/50 pb-2">خيارات المنتجات</h3>
+                {lines.filter(l => l.shades && l.shades.length > 0).map(l => (
+                  <div key={l.product_id} className="space-y-2">
+                    <p className="text-sm text-foreground/90">
+                      الدرجة / اللون لـ <span className="font-medium text-foreground">{l.name}</span>:
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {l.shades!.map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => setSelectedShades((prev) => ({ ...prev, [l.product_id]: s }))}
+                          className={`rounded-sm border px-4 py-2 text-sm transition-all duration-200 ${
+                            selectedShades[l.product_id] === s
+                              ? "border-primary bg-primary/10 text-primary font-medium shadow-sm"
+                              : "border-border/60 text-muted-foreground hover:border-primary/60 hover:text-foreground"
+                          }`}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div className="rounded-sm border border-primary/25 bg-primary/5 p-5">
               <div className="flex items-center gap-3">
@@ -180,7 +311,7 @@ function CheckoutPage() {
             <h2 className="font-display text-2xl text-foreground">ملخص الطلب</h2>
             <ul className="mt-6 space-y-4">
               {lines.map((l) => (
-                <li key={l.product_id} className="flex items-center gap-4">
+                <li key={l.product_id} className="flex items-center gap-4 border-b border-border/50 pb-3 last:border-0 last:pb-0">
                   <img
                     src={l.image || "/images/perfume-1.jpg"}
                     alt={l.name}
@@ -198,13 +329,30 @@ function CheckoutPage() {
               ))}
             </ul>
             <div className="mt-6 gold-rule" />
-            <div className="mt-5 flex items-center justify-between text-sm text-muted-foreground">
-              <span>المجموع الفرعي</span>
-              <span>{formatDZD(total)}</span>
+            <div className="mt-5 space-y-3 text-sm text-muted-foreground">
+              <div className="flex items-center justify-between">
+                <span>المجموع الفرعي</span>
+                <span>{formatDZD(total)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>
+                  {deliveryType === "desk" ? "توصيل البيرو" : "توصيل للمنزل"}
+                </span>
+                <span>
+                  {!form.wilaya
+                    ? "—"
+                    : deliveryFeeAmount === 0
+                    ? "مجاني"
+                    : deliveryFeeAmount !== null
+                    ? formatDZD(deliveryFeeAmount)
+                    : "مجاني"}
+                </span>
+              </div>
             </div>
-            <div className="mt-3 flex items-center justify-between text-lg">
+            <div className="mt-4 gold-rule" />
+            <div className="mt-4 flex items-center justify-between text-lg">
               <span className="text-foreground">المجموع النهائي</span>
-              <span className="text-primary">{formatDZD(total)}</span>
+              <span className="text-primary">{formatDZD(grandTotal)}</span>
             </div>
           </aside>
         </div>

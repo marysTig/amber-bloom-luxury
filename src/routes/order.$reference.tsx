@@ -8,9 +8,9 @@ import { formatDZD } from "@/lib/format";
 export const Route = createFileRoute("/order/$reference")({
   head: () => ({
     meta: [
-      { title: "تأكيد الطلب | عَنبَر" },
-      { name: "description", content: "تفاصيل طلبك في دار عَنبَر مع الدفع عند الاستلام." },
-      { property: "og:title", content: "تأكيد الطلب | عَنبَر" },
+      { title: "تأكيد الطلب | Glow & Care" },
+      { name: "description", content: "تفاصيل طلبك في دار Glow & Care مع الدفع عند الاستلام." },
+      { property: "og:title", content: "تأكيد الطلب | Glow & Care" },
       { property: "og:description", content: "تم استلام طلبك بنجاح." },
       { name: "robots", content: "noindex" },
     ],
@@ -44,7 +44,9 @@ function OrderPage() {
         ) : (
           <>
             <div className="text-center">
-              <div className="glow-orb mx-auto h-24 w-24 rounded-full [background:radial-gradient(circle,color-mix(in_oklab,var(--amber-glow)_50%,transparent),transparent_70%)]" />
+              <div className="glow-orb mx-auto h-32 w-32 rounded-full [background:radial-gradient(circle,color-mix(in_oklab,var(--amber-glow)_50%,transparent),transparent_70%)] flex items-center justify-center">
+                <img src="/Logo.png" alt="Glow & Care" className="h-28 w-auto opacity-95" />
+              </div>
               <h1 className="mt-6 font-display text-3xl text-foreground md:text-4xl">
                 تم استلام طلبك بنجاح ✦
               </h1>

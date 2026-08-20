@@ -13,15 +13,15 @@ export const Route = createFileRoute("/catalog")({
     typeof search["category"] === "string" ? { category: search["category"] } : {},
   head: () => ({
     meta: [
-      { title: "الكتالوج | عَنبَر" },
+      { title: "الكتالوج | Glow & Care" },
       {
         name: "description",
-        content: "تصفح مجموعة عطور عَنبَر الفاخرة: رجالي، نسائي، للجنسين وإصدارات محدودة.",
+        content: "تصفح مجموعة منتجات Glow & Care الفاخرة للعناية بالبشرة والجمال.",
       },
-      { property: "og:title", content: "الكتالوج | عَنبَر" },
+      { property: "og:title", content: "الكتالوج | Glow & Care" },
       {
         property: "og:description",
-        content: "مجموعة عطور فاخرة بأسعار بالدينار الجزائري مع الدفع عند الاستلام.",
+        content: "مجموعة منتجات فاخرة بأسعار بالدينار الجزائري مع الدفع عند الاستلام.",
       },
     ],
   }),
@@ -91,8 +91,8 @@ function CatalogPage() {
               <input
                 value={term}
                 onChange={(e) => setTerm(e.target.value.slice(0, 80))}
-                placeholder="البحث عن عطر..."
-                aria-label="البحث عن عطر"
+                placeholder="البحث عن منتج..."
+                aria-label="البحث عن منتج"
                 className="h-13 w-full rounded-sm border border-border/70 bg-card/40 py-4 pr-11 pl-4 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary/60"
               />
             </div>
@@ -133,7 +133,7 @@ function CatalogPage() {
           </div>
         </div>
 
-        <div className="mt-12 grid gap-7 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="mt-12 grid grid-cols-2 gap-4 sm:gap-7 lg:grid-cols-3 xl:grid-cols-4">
           {products.isLoading &&
             [0, 1, 2, 3].map((i) => (
               <div key={i} className="h-[520px] animate-pulse rounded-sm bg-card/50" />

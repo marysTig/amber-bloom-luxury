@@ -4,15 +4,15 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 export const Route = createFileRoute("/story")({
   head: () => ({
     meta: [
-      { title: "قصة العلامة | عَنبَر" },
+      { title: "قصة العلامة | Glow & Care" },
       {
         name: "description",
-        content: "حكاية دار عَنبَر: حرفية عطرية شرقية، مكوّنات نادرة، وتوقيع لا يُنسى.",
+        content: "حكاية دار Glow & Care: حرفية عطرية شرقية، مكوّنات نادرة، وتوقيع لا يُنسى.",
       },
-      { property: "og:title", content: "قصة العلامة | عَنبَر" },
+      { property: "og:title", content: "قصة العلامة | Glow & Care" },
       {
         property: "og:description",
-        content: "حكاية دار عَنبَر: حرفية عطرية شرقية ومكوّنات نادرة.",
+        content: "حكاية دار Glow & Care: حرفية عطرية شرقية ومكوّنات نادرة.",
       },
     ],
   }),
@@ -22,7 +22,7 @@ export const Route = createFileRoute("/story")({
 const CHAPTERS = [
   {
     title: "البداية",
-    body: "بدأت عَنبَر من شغف بالبخور والزيوت العطرية التي كانت تملأ بيوت الجدّات؛ رائحة تُشبه الذاكرة أكثر مما تُشبه العطر.",
+    body: "بدأت Glow & Care من شغف بالبخور والزيوت العطرية التي كانت تملأ بيوت الجدّات؛ رائحة تُشبه الذاكرة أكثر مما تُشبه العطر.",
   },
   {
     title: "المكوّنات",

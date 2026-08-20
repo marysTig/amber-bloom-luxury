@@ -77,7 +77,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "عَنبَر | دار عطور فاخرة" },
+      { title: "Glow & Care | دار عطور فاخرة" },
       {
         name: "description",
         content: "عطور شرقية فاخرة بتوقيع جزائري. اكتشف مجموعتنا وادفع عند الاستلام.",
@@ -104,7 +104,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="ar" dir="rtl" className="dark">
+    <html lang="fr" dir="ltr">
       <head>
         <HeadContent />
       </head>
@@ -124,7 +124,7 @@ function RootComponent() {
       <CartProvider>
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
-        <Toaster position="top-center" dir="rtl" richColors />
+        <Toaster position="top-center" dir="ltr" richColors />
       </CartProvider>
     </QueryClientProvider>
   );

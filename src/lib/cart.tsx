@@ -15,6 +15,7 @@ export type CartLine = {
   image: string;
   quantity: number;
   stock: number;
+  shades?: string[];
 };
 
 type CartContextValue = {
@@ -30,7 +31,7 @@ type CartContextValue = {
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
-const STORAGE_KEY = "ambre-cart-v1";
+const STORAGE_KEY = "ambre-cart-v3";
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>([]);
@@ -40,12 +41,25 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setLines(JSON.parse(raw) as CartLine[]);
+      if (raw) {
+        setLines(JSON.parse(raw) as CartLine[]);
+      }
     } catch {
       /* ignore */
     }
     setHydrated(true);
   }, []);
+
+  // Force cleanup in case React Fast Refresh preserves invalid state in memory
+  useEffect(() => {
+    if (lines.length > 0) {
+      const isValid = lines.every(item => 'shades' in item);
+      if (!isValid) {
+        setLines([]);
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    }
+  }, [lines]);
 
   useEffect(() => {
     if (!hydrated) return;

@@ -14,21 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      user_roles: {
+        Row: { id: string; user_id: string; role: string }
+        Insert: { id?: string; user_id: string; role: string }
+        Update: { id?: string; user_id?: string; role?: string }
+        Relationships: []
+      }
+      delivery_fees: {
+        Row: {
+          wilaya_code: number
+          wilaya_name_fr: string
+          desk_price: number
+          home_price: number
+          updated_at: string
+        }
+        Insert: {
+          wilaya_code: number
+          wilaya_name_fr: string
+          desk_price?: number
+          home_price?: number
+          updated_at?: string
+        }
+        Update: {
+          wilaya_code?: number
+          wilaya_name_fr?: string
+          desk_price?: number
+          home_price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string
           id: string
           name: string
+          description: string | null
+          photo: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           name: string
+          description?: string | null
+          photo?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           name?: string
+          description?: string | null
+          photo?: string | null
         }
         Relationships: []
       }
@@ -116,54 +152,63 @@ export type Database = {
       products: {
         Row: {
           badge: string | null
-          base_notes: string[]
-          bottle_color: string
+          benefits: string[]
           category_id: string | null
           created_at: string
           description: string
-          heart_notes: string[]
+          how_to_use: string
           id: string
-          image: string
+          images: string[]
+          ingredients: string[]
           name: string
           price: number
           sales_count: number
           stock: number
-          top_notes: string[]
           updated_at: string
+          shade: string[]
+          origin: string
+          expiration_date: string
+          volume_ml: number
         }
         Insert: {
           badge?: string | null
-          base_notes?: string[]
-          bottle_color?: string
+          benefits?: string[]
           category_id?: string | null
           created_at?: string
           description?: string
-          heart_notes?: string[]
+          how_to_use?: string
           id?: string
-          image?: string
+          images?: string[]
+          ingredients?: string[]
           name: string
           price?: number
           sales_count?: number
           stock?: number
-          top_notes?: string[]
           updated_at?: string
+          shade?: string[]
+          origin?: string
+          expiration_date?: string
+          volume_ml?: number | undefined
         }
         Update: {
           badge?: string | null
-          base_notes?: string[]
-          bottle_color?: string
+          benefits?: string[]
           category_id?: string | null
           created_at?: string
           description?: string
-          heart_notes?: string[]
+          how_to_use?: string
           id?: string
-          image?: string
+          images?: string[]
+          ingredients?: string[]
           name?: string
           price?: number
           sales_count?: number
           stock?: number
-          top_notes?: string[]
           updated_at?: string
+          shade?: string[]
+          origin?: string
+          expiration_date?: string
+          volume_ml?: number | undefined
         }
         Relationships: [
           {

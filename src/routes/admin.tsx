@@ -3,13 +3,16 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ChevronDown, ChevronRight, Loader2, Lock, LogOut, Pencil, Plus, Trash2, Truck, User, X } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Loader2, Lock, LogOut, MessageSquare, Pencil, Plus, Star, Trash2, Truck, User, X } from "lucide-react";
 import {
   adminDeleteCategory,
   adminDeleteProduct,
   adminGetDeliveryFees,
   adminListOrders,
   adminDeleteOrder,
+  adminListReviews,
+  adminUpdateReviewStatus,
+  adminDeleteReview,
   adminLogin,
   adminOverview,
   adminSaveCategory,
@@ -43,6 +46,7 @@ const TABS = [
   { id: "products", label: "المنتجات" },
   { id: "categories", label: "الفئات" },
   { id: "orders", label: "الطلبات" },
+  { id: "reviews", label: "الآراء" },
   { id: "livraison", label: "الشحن" },
   { id: "profile", label: "Profil" },
 ] as const;
@@ -199,6 +203,7 @@ function Dashboard({ token, onSignOut }: { token: string; onSignOut: () => void 
         {tab === "products" && <ProductsTab token={token} />}
         {tab === "categories" && <CategoriesTab token={token} />}
         {tab === "orders" && <OrdersTab token={token} />}
+        {tab === "reviews" && <ReviewsTab token={token} />}
         {tab === "livraison" && <LivraisonTab token={token} />}
         {tab === "profile" && <ProfileTab token={token} onSignOut={onSignOut} />}
       </main>
@@ -1300,6 +1305,147 @@ function TagInput({
           إضافة
         </button>
       </div>
+    </div>
+  );
+}
+
+function ReviewsTab({ token }: { token: string }) {
+  const qc = useQueryClient();
+  const fetchReviews = useServerFn(adminListReviews);
+  const updateStatus = useServerFn(adminUpdateReviewStatus);
+  const deleteReview = useServerFn(adminDeleteReview);
+  
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-reviews"],
+    queryFn: () => fetchReviews({ data: { token } }),
+  });
+
+  const handleUpdateStatus = async (id: string, status: "approved" | "rejected") => {
+    try {
+      await updateStatus({ data: { token, id, status } });
+      toast.success("تم تحديث حالة التقييم");
+      qc.invalidateQueries({ queryKey: ["admin-reviews"] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "تعذّر تحديث الحالة");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("هل أنت متأكد من أنك تريد حذف هذا التقييم نهائياً؟")) return;
+    try {
+      await deleteReview({ data: { token, id } });
+      toast.success("تم حذف التقييم");
+      qc.invalidateQueries({ queryKey: ["admin-reviews"] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "تعذّر حذف التقييم");
+    }
+  };
+
+  if (isLoading) return <div className="h-40 animate-pulse rounded-sm bg-card/50" />;
+
+  const reviews = data ?? [];
+
+  return (
+    <div>
+      <h2 className="font-display text-2xl text-foreground">إدارة آراء العملاء</h2>
+
+      {reviews.length === 0 ? (
+        <p className="mt-10 text-muted-foreground">لا توجد تقييمات بعد.</p>
+      ) : (
+        <div className="mt-8 grid gap-4 lg:grid-cols-2">
+          {reviews.map((review) => (
+            <div key={review.id} className="rounded-sm border border-border/60 bg-card/40 p-5 flex flex-col">
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-medium text-sm">
+                    {review.first_name.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">{review.first_name}</p>
+                    <p className="text-xs text-muted-foreground">{formatDate(review.created_at)}</p>
+                  </div>
+                </div>
+                <div className={`px-2 py-1 rounded-sm text-xs ${
+                  review.status === 'pending' ? 'bg-yellow-500/15 text-yellow-500' :
+                  review.status === 'approved' ? 'bg-green-500/15 text-green-500' :
+                  'bg-destructive/15 text-destructive'
+                }`}>
+                  {review.status === 'pending' ? 'قيد الانتظار' :
+                   review.status === 'approved' ? 'مقبول' : 'مرفوض'}
+                </div>
+              </div>
+
+              <div className="flex gap-1 mb-3" dir="ltr">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    className={`h-4 w-4 ${
+                      star <= review.rating ? "fill-[#C8A24A] text-[#C8A24A]" : "text-muted-foreground/30"
+                    }`}
+                  />
+                ))}
+              </div>
+
+              <p className="text-sm text-foreground/90 italic flex-1 mb-4">
+                "{review.description}"
+              </p>
+
+              {review.order_reference && (
+                <div className="mb-4 text-xs text-muted-foreground bg-background p-2 rounded-sm inline-block self-start border border-border/50">
+                  طلب رقم: {review.order_reference}
+                </div>
+              )}
+
+              <div className="flex gap-2 justify-end border-t border-border/50 pt-4 mt-auto">
+                {review.status === 'pending' && (
+                  <>
+                    <button
+                      onClick={() => handleUpdateStatus(review.id, "approved")}
+                      className="flex items-center gap-1 rounded-sm bg-green-500/10 px-3 py-1.5 text-xs text-green-500 hover:bg-green-500/20"
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                      قبول
+                    </button>
+                    <button
+                      onClick={() => handleUpdateStatus(review.id, "rejected")}
+                      className="flex items-center gap-1 rounded-sm bg-destructive/10 px-3 py-1.5 text-xs text-destructive hover:bg-destructive/20"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                      رفض
+                    </button>
+                  </>
+                )}
+                {review.status === 'rejected' && (
+                  <button
+                    onClick={() => handleUpdateStatus(review.id, "approved")}
+                    className="flex items-center gap-1 rounded-sm bg-green-500/10 px-3 py-1.5 text-xs text-green-500 hover:bg-green-500/20"
+                  >
+                    <Check className="h-3.5 w-3.5" />
+                    قبول
+                  </button>
+                )}
+                {review.status === 'approved' && (
+                  <button
+                    onClick={() => handleUpdateStatus(review.id, "rejected")}
+                    className="flex items-center gap-1 rounded-sm bg-destructive/10 px-3 py-1.5 text-xs text-destructive hover:bg-destructive/20"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                    إخفاء
+                  </button>
+                )}
+                <button
+                  onClick={() => handleDelete(review.id)}
+                  className="flex items-center gap-1 rounded-sm bg-destructive/10 px-3 py-1.5 text-xs text-destructive hover:bg-destructive/20"
+                  title="حذف نهائي"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  حذف
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

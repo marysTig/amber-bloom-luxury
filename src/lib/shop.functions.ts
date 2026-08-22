@@ -71,3 +71,37 @@ export const getOrderByReference = createServerFn({ method: "GET" })
 
     return { ...order, items: items ?? [] };
   });
+
+export const submitReview = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) =>
+    z.object({
+      first_name: z.string().min(2).max(100),
+      rating: z.number().min(1).max(5),
+      description: z.string().min(3).max(1000),
+      order_reference: z.string().optional(),
+    }).parse(data)
+  )
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("reviews").insert({
+      first_name: data.first_name,
+      rating: data.rating,
+      description: data.description,
+      order_reference: data.order_reference,
+      status: "pending",
+    });
+    if (error) throw new Error(error.message);
+    return { success: true };
+  });
+
+export const getApprovedReviews = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("reviews")
+      .select("id, first_name, rating, description, created_at")
+      .eq("status", "approved")
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });

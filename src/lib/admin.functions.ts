@@ -254,3 +254,53 @@ export const adminUpdateProfile = createServerFn({ method: "POST" })
     
     return { ok: true };
   });
+
+// ── Reviews ──────────────────────────────────────────────────────────────────
+
+export const adminListReviews = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => adminTokenSchema.parse(data))
+  .handler(async ({ data }) => {
+    const { requireAdmin } = await import("./admin.server");
+    await requireAdmin(data.token);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: reviews, error } = await supabaseAdmin
+      .from("reviews")
+      .select("id, first_name, rating, description, status, order_reference, created_at")
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return reviews ?? [];
+  });
+
+export const adminUpdateReviewStatus = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) =>
+    adminTokenSchema
+      .extend({
+        id: z.string().uuid(),
+        status: z.enum(["pending", "approved", "rejected"]),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data }) => {
+    const { requireAdmin } = await import("./admin.server");
+    await requireAdmin(data.token);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("reviews")
+      .update({ status: data.status })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const adminDeleteReview = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) =>
+    adminTokenSchema.extend({ id: z.string().uuid() }).parse(data),
+  )
+  .handler(async ({ data }) => {
+    const { requireAdmin } = await import("./admin.server");
+    await requireAdmin(data.token);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("reviews").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });

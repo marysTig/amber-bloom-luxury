@@ -4,6 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { ProductCard } from "@/components/site/ProductCard";
 import { categoriesQuery, productsQuery } from "@/lib/catalog";
+import { getApprovedReviews } from "@/lib/shop.functions";
+import { useServerFn } from "@tanstack/react-start";
+import { Star, ShieldCheck, Truck, Banknote, Headset } from "lucide-react";
 const heroImages = [
   "/images/cosmetic-1.png",
   "/images/cosmetic-2.png",
@@ -42,6 +45,11 @@ function HomePage() {
 
   const products = useQuery(productsQuery());
   const categories = useQuery(categoriesQuery());
+  const fetchReviews = useServerFn(getApprovedReviews);
+  const reviews = useQuery({
+    queryKey: ["approved-reviews"],
+    queryFn: () => fetchReviews(),
+  });
 
   const list = products.data ?? [];
   const featured = list.slice(0, 3);
@@ -95,7 +103,7 @@ function HomePage() {
                 href="#featured"
                 className="rounded-sm border border-primary/40 px-9 py-4 text-sm tracking-wider text-primary transition-colors hover:bg-primary/10"
               >
-                استكشف العطور
+                découvre les produit
               </a>
             </div>
 
@@ -148,7 +156,7 @@ function HomePage() {
       </section>
 
       {/* تصفح حسب الفئة */}
-      <section className="mx-auto max-w-7xl px-4 py-10 md:px-8 md:py-16">
+      <section className="mx-auto max-w-7xl px-4 pt-10 pb-4 md:px-8 md:pt-16 md:pb-6">
         <SectionHeading kicker="" title="تصفح حسب الفئة" />
         <div className="mt-10 flex gap-6 overflow-x-auto pb-6 scrollbar-none snap-x snap-mandatory">
           {(categories.data ?? []).map((c) => (
@@ -171,8 +179,16 @@ function HomePage() {
         </div>
       </section>
 
+      <section className="mx-auto max-w-4xl px-4 py-4 text-center md:py-6">
+        <div className="mx-auto w-24 gold-rule mb-6" />
+        <p className="font-display text-2xl text-primary md:text-3xl leading-relaxed">
+          "لكل روح إشراقة خاصة، اجعل إشراقتك لا تُنسى"
+        </p>
+        <div className="mx-auto w-24 gold-rule mt-6" />
+      </section>
+
       {/* المنتجات المميزة */}
-      <section id="featured" className="mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-24">
+      <section id="featured" className="mx-auto max-w-7xl px-4 pt-8 pb-16 md:px-8 md:pt-12 md:pb-24">
         <SectionHeading kicker="مختارات الدار" title="المنتجات المميزة" />
         <div className="mt-12 grid grid-cols-2 gap-4 sm:gap-7 lg:grid-cols-3">
           {featured.map((p) => (
@@ -185,6 +201,80 @@ function HomePage() {
         </div>
       </section>
 
+      {/* لماذا تسوقين من Glow & Care؟ */}
+      <section className="mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-24 bg-card/20 border-y border-border/50">
+        <SectionHeading kicker="مزايا المتجر" title={<>لماذا تتسوقين من <span dir="ltr">Glow & Care</span>؟</>} />
+        <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="flex flex-col items-center text-center gap-4">
+            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-2">
+              <ShieldCheck className="h-8 w-8" />
+            </div>
+            <h3 className="font-display text-xl text-foreground">منتجات أصلية 100%</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              مختارة بعناية من أشهر العلامات العالمية.
+            </p>
+          </div>
+          <div className="flex flex-col items-center text-center gap-4">
+            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-2">
+              <Truck className="h-8 w-8" />
+            </div>
+            <h3 className="font-display text-xl text-foreground">توصيل سريع</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              إلى جميع أنحاء الوطن خلال 24–48 ساعة.
+            </p>
+          </div>
+          <div className="flex flex-col items-center text-center gap-4">
+            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-2">
+              <Banknote className="h-8 w-8" />
+            </div>
+            <h3 className="font-display text-xl text-foreground">الدفع عند الاستلام</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              ادفعي عند استلام طلبك بكل أمان.
+            </p>
+          </div>
+          <div className="flex flex-col items-center text-center gap-4">
+            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-2">
+              <Headset className="h-8 w-8" />
+            </div>
+            <h3 className="font-display text-xl text-foreground">خدمة عملاء مميزة</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              نحن هنا لمساعدتك عبر WhatsApp متى شئتِ.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* آراء العملاء */}
+      {(reviews.data && reviews.data.length > 0) && (
+        <section className="mx-auto max-w-7xl px-4 py-16 md:px-8 md:py-24">
+          <SectionHeading kicker="ماذا يقولون عنا" title="آراء العملاء" />
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {reviews.data.map((review: any) => (
+              <div key={review.id} className="rounded-sm border border-border/60 bg-card/40 p-6 flex flex-col gap-4 text-center items-center">
+                <div className="flex gap-1 justify-center" dir="ltr">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className={`h-4 w-4 ${
+                        star <= review.rating ? "fill-[#C8A24A] text-[#C8A24A]" : "text-muted-foreground/30"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <p className="text-sm leading-relaxed text-foreground/90 italic flex-1 w-full">
+                  "{review.description}"
+                </p>
+                <div className="flex items-center justify-center gap-3 border-t border-border/50 pt-4 mt-2 w-full">
+                  <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-medium text-xs">
+                    {review.first_name.charAt(0)}
+                  </div>
+                  <span className="text-sm font-medium text-foreground">{review.first_name}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* CTA نهائي */}
       <section className="mx-auto max-w-7xl px-4 pb-8 md:px-8">
@@ -208,7 +298,7 @@ function HomePage() {
   );
 }
 
-function SectionHeading({ kicker, title }: { kicker?: string; title: string }) {
+function SectionHeading({ kicker, title }: { kicker?: string; title: React.ReactNode }) {
   return (
     <div className="text-center">
       {kicker && <p className="text-[11px] tracking-[0.45em] text-primary/80">{kicker}</p>}

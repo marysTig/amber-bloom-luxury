@@ -1,8 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Loader2, Star, X } from "lucide-react";
 import { SiteLayout } from "@/components/site/SiteLayout";
-import { getOrderByReference } from "@/lib/shop.functions";
+import { getOrderByReference, submitReview } from "@/lib/shop.functions";
 import { formatDZD } from "@/lib/format";
 
 export const Route = createFileRoute("/order/$reference")({
@@ -87,6 +90,8 @@ function OrderPage() {
               </p>
             </div>
 
+            <ReviewSection orderReference={data.reference} />
+
             <div className="mt-10 text-center">
               <Link
                 to="/"
@@ -107,6 +112,133 @@ function Row({ label, value }: { label: string; value: string }) {
     <div className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
       <span className="text-muted-foreground">{label}</span>
       <span className="text-foreground">{value}</span>
+    </div>
+  );
+}
+
+function ReviewSection({ orderReference }: { orderReference: string }) {
+  const [open, setOpen] = useState(true);
+  const [submitted, setSubmitted] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [firstName, setFirstName] = useState("");
+  const [description, setDescription] = useState("");
+  const sendReview = useServerFn(submitReview);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!firstName.trim() || !description.trim()) {
+      toast.error("يرجى ملء جميع الحقول");
+      return;
+    }
+    
+    setPending(true);
+    try {
+      await sendReview({
+        data: {
+          first_name: firstName,
+          rating,
+          description,
+          order_reference: orderReference,
+        },
+      });
+      setSubmitted(true);
+      toast.success("تم إرسال تقييمك بنجاح. شكراً لك!");
+      setTimeout(() => setOpen(false), 3000);
+    } catch (err) {
+      toast.error("تعذر إرسال التقييم، يرجى المحاولة لاحقاً");
+    } finally {
+      setPending(false);
+    }
+  };
+
+  if (!open) return null;
+
+  if (submitted) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-in fade-in duration-300">
+        <div className="relative w-full max-w-md rounded-sm border border-primary/20 bg-card p-6 md:p-8 text-center elegant-shadow animate-in zoom-in-95">
+          <button onClick={() => setOpen(false)} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground">
+            <X className="h-5 w-5" />
+          </button>
+          <Star className="mx-auto h-12 w-12 text-[#C8A24A] mb-4 fill-[#C8A24A]" />
+          <h3 className="font-display text-2xl text-foreground">شكراً لتقييمك!</h3>
+          <p className="mt-3 text-sm text-muted-foreground">
+            تم استلام تقييمك بنجاح، سيتم مراجعته وعرضه في الموقع.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-in fade-in duration-300">
+      <div className="relative w-full max-w-md rounded-sm border border-border/60 bg-card p-6 md:p-8 elegant-shadow animate-in zoom-in-95">
+        <button onClick={() => setOpen(false)} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground">
+          <X className="h-5 w-5" />
+        </button>
+        
+        <h3 className="font-display text-2xl text-foreground text-center mt-2">ما رأيك في تجربتك معنا؟</h3>
+        <p className="mt-2 text-center text-sm text-muted-foreground mb-8">
+          يسعدنا سماع رأيك لمساعدتنا على تحسين خدماتنا
+        </p>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="mb-2 block text-sm text-foreground/85">التقييم</label>
+            <div className="flex gap-2 justify-center py-2" dir="ltr">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setRating(star)}
+                  className="transition-transform hover:scale-110 focus:outline-none"
+                >
+                  <Star
+                    className={`h-9 w-9 ${
+                      star <= rating ? "fill-[#C8A24A] text-[#C8A24A]" : "text-muted-foreground/30"
+                    }`}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm text-foreground/85">الاسم</label>
+            <input
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              maxLength={100}
+              className="input-base"
+              placeholder="الاسم الأول"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm text-foreground/85">رأيك</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              maxLength={1000}
+              rows={4}
+              className="input-base resize-none"
+              placeholder="اكتب تقييمك هنا..."
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={pending}
+            className="flex w-full items-center justify-center gap-2 rounded-sm bg-primary py-3.5 text-sm font-semibold tracking-wider text-primary-foreground transition-all hover:brightness-110 disabled:opacity-60"
+          >
+            {pending && <Loader2 className="h-4 w-4 animate-spin" />}
+            {pending ? "جارٍ الإرسال..." : "إرسال التقييم"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

@@ -25,7 +25,14 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   const contentType = response.headers.get("content-type") ?? "";
   if (!contentType.includes("application/json")) return response;
 
-  const body = await response.clone().text();
+  let body: string;
+  try {
+    body = await response.clone().text();
+  } catch (err) {
+    // If the body is already consumed or locked, we can't inspect it for the h3 error.
+    return response;
+  }
+
   if (!isH3SwallowedErrorBody(body)) return response;
 
   const err = consumeLastCapturedError() ?? new Error(`h3 swallowed SSR error: ${body}`);

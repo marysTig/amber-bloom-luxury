@@ -1079,66 +1079,68 @@ function LivraisonTab({ token }: { token: string }) {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-sm border border-border bg-card">
-        {/* Table header */}
-        <div className="grid grid-cols-[60px_1fr_150px_150px] border-b border-border bg-muted/40 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          <span>Code</span>
-          <span>Wilaya</span>
-          <span className="text-center">Bureau (DZD)</span>
-          <span className="text-center">À la maison (DZD)</span>
+      <div className="overflow-x-auto rounded-sm border border-border bg-card">
+        <div className="min-w-[600px]">
+          {/* Table header */}
+          <div className="grid grid-cols-[60px_1fr_150px_150px] border-b border-border bg-muted/40 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <span>Code</span>
+            <span>Wilaya</span>
+            <span className="text-center">Bureau (DZD)</span>
+            <span className="text-center">À la maison (DZD)</span>
+          </div>
+
+          {/* Rows */}
+          {filtered.map((w) => (
+            <div
+              key={w.wilayaCode}
+              className="grid grid-cols-[60px_1fr_150px_150px] items-center border-b border-border/50 px-5 py-3 last:border-0 hover:bg-primary/5 transition-colors"
+            >
+              <span className="flex h-7 w-7 items-center justify-center rounded-sm bg-primary/10 text-xs font-bold text-primary">
+                {String(w.wilayaCode).padStart(2, "0")}
+              </span>
+              <div>
+                <p className="text-sm font-medium text-foreground">{w.nameFr}</p>
+                <p className="text-xs text-muted-foreground">{w.nameAr}</p>
+              </div>
+              <div className="flex justify-center">
+                <input
+                  type="number"
+                  min="0"
+                  step="50"
+                  value={fees[w.wilayaCode]?.desk ?? 0}
+                  onChange={(e) =>
+                    setFees((prev) => ({
+                      ...prev,
+                      [w.wilayaCode]: { desk: Number(e.target.value), home: prev[w.wilayaCode]?.home ?? 0 },
+                    }))
+                  }
+                  className="w-28 rounded-sm border border-border bg-background px-3 py-1.5 text-center text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+              <div className="flex justify-center">
+                <input
+                  type="number"
+                  min="0"
+                  step="50"
+                  value={fees[w.wilayaCode]?.home ?? 0}
+                  onChange={(e) =>
+                    setFees((prev) => ({
+                      ...prev,
+                      [w.wilayaCode]: { desk: prev[w.wilayaCode]?.desk ?? 0, home: Number(e.target.value) },
+                    }))
+                  }
+                  className="w-28 rounded-sm border border-border bg-background px-3 py-1.5 text-center text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+            </div>
+          ))}
+
+          {filtered.length === 0 && (
+            <div className="py-10 text-center text-sm text-muted-foreground">
+              Aucune wilaya trouvée
+            </div>
+          )}
         </div>
-
-        {/* Rows */}
-        {filtered.map((w) => (
-          <div
-            key={w.wilayaCode}
-            className="grid grid-cols-[60px_1fr_150px_150px] items-center border-b border-border/50 px-5 py-3 last:border-0 hover:bg-primary/5 transition-colors"
-          >
-            <span className="flex h-7 w-7 items-center justify-center rounded-sm bg-primary/10 text-xs font-bold text-primary">
-              {String(w.wilayaCode).padStart(2, "0")}
-            </span>
-            <div>
-              <p className="text-sm font-medium text-foreground">{w.nameFr}</p>
-              <p className="text-xs text-muted-foreground">{w.nameAr}</p>
-            </div>
-            <div className="flex justify-center">
-              <input
-                type="number"
-                min="0"
-                step="50"
-                value={fees[w.wilayaCode]?.desk ?? 0}
-                onChange={(e) =>
-                  setFees((prev) => ({
-                    ...prev,
-                    [w.wilayaCode]: { desk: Number(e.target.value), home: prev[w.wilayaCode]?.home ?? 0 },
-                  }))
-                }
-                className="w-28 rounded-sm border border-border bg-background px-3 py-1.5 text-center text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-            </div>
-            <div className="flex justify-center">
-              <input
-                type="number"
-                min="0"
-                step="50"
-                value={fees[w.wilayaCode]?.home ?? 0}
-                onChange={(e) =>
-                  setFees((prev) => ({
-                    ...prev,
-                    [w.wilayaCode]: { desk: prev[w.wilayaCode]?.desk ?? 0, home: Number(e.target.value) },
-                  }))
-                }
-                className="w-28 rounded-sm border border-border bg-background px-3 py-1.5 text-center text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-            </div>
-          </div>
-        ))}
-
-        {filtered.length === 0 && (
-          <div className="py-10 text-center text-sm text-muted-foreground">
-            Aucune wilaya trouvée
-          </div>
-        )}
       </div>
     </div>
   );
